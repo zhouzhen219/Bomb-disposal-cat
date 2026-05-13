@@ -32,6 +32,23 @@ set(CMAKE_MAKEFILE_DEPENDS
   "CMakeFiles/3.30.4/CMakeCXXCompiler.cmake"
   "CMakeFiles/3.30.4/CMakeRCCompiler.cmake"
   "CMakeFiles/3.30.4/CMakeSystem.cmake"
+  "D:/a_computer/game/Bomb-disposal cat/third_party/SFML-3.0.0/lib/cmake/SFML/SFMLAudioSharedTargets-debug.cmake"
+  "D:/a_computer/game/Bomb-disposal cat/third_party/SFML-3.0.0/lib/cmake/SFML/SFMLAudioSharedTargets-release.cmake"
+  "D:/a_computer/game/Bomb-disposal cat/third_party/SFML-3.0.0/lib/cmake/SFML/SFMLAudioSharedTargets.cmake"
+  "D:/a_computer/game/Bomb-disposal cat/third_party/SFML-3.0.0/lib/cmake/SFML/SFMLConfig.cmake"
+  "D:/a_computer/game/Bomb-disposal cat/third_party/SFML-3.0.0/lib/cmake/SFML/SFMLConfigVersion.cmake"
+  "D:/a_computer/game/Bomb-disposal cat/third_party/SFML-3.0.0/lib/cmake/SFML/SFMLGraphicsSharedTargets-debug.cmake"
+  "D:/a_computer/game/Bomb-disposal cat/third_party/SFML-3.0.0/lib/cmake/SFML/SFMLGraphicsSharedTargets-release.cmake"
+  "D:/a_computer/game/Bomb-disposal cat/third_party/SFML-3.0.0/lib/cmake/SFML/SFMLGraphicsSharedTargets.cmake"
+  "D:/a_computer/game/Bomb-disposal cat/third_party/SFML-3.0.0/lib/cmake/SFML/SFMLNetworkSharedTargets-debug.cmake"
+  "D:/a_computer/game/Bomb-disposal cat/third_party/SFML-3.0.0/lib/cmake/SFML/SFMLNetworkSharedTargets-release.cmake"
+  "D:/a_computer/game/Bomb-disposal cat/third_party/SFML-3.0.0/lib/cmake/SFML/SFMLNetworkSharedTargets.cmake"
+  "D:/a_computer/game/Bomb-disposal cat/third_party/SFML-3.0.0/lib/cmake/SFML/SFMLSystemSharedTargets-debug.cmake"
+  "D:/a_computer/game/Bomb-disposal cat/third_party/SFML-3.0.0/lib/cmake/SFML/SFMLSystemSharedTargets-release.cmake"
+  "D:/a_computer/game/Bomb-disposal cat/third_party/SFML-3.0.0/lib/cmake/SFML/SFMLSystemSharedTargets.cmake"
+  "D:/a_computer/game/Bomb-disposal cat/third_party/SFML-3.0.0/lib/cmake/SFML/SFMLWindowSharedTargets-debug.cmake"
+  "D:/a_computer/game/Bomb-disposal cat/third_party/SFML-3.0.0/lib/cmake/SFML/SFMLWindowSharedTargets-release.cmake"
+  "D:/a_computer/game/Bomb-disposal cat/third_party/SFML-3.0.0/lib/cmake/SFML/SFMLWindowSharedTargets.cmake"
   )
 
 # The corresponding makefile is:

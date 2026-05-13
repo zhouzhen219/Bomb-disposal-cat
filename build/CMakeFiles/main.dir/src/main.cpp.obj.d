@@ -1,12 +1,12 @@
 CMakeFiles/main.dir/src/main.cpp.obj: \
  D:\a_computer\game\Bomb-disposal\ cat\src\main.cpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/BlendMode.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Export.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Config.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/CircleShape.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Shape.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Color.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/BlendMode.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Export.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Config.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/CircleShape.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Shape.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Color.hpp \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/cstdint \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/c++config.h \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/x86_64-w64-mingw32/bits/os_defines.h \
@@ -23,14 +23,14 @@ CMakeFiles/main.dir/src/main.cpp.obj: \
  D:/a_computer/Game_gw/mingw64/x86_64-w64-mingw32/include/sdks/_mingw_ddk.h \
  D:/a_computer/Game_gw/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stddef.h \
  D:/a_computer/Game_gw/mingw64/x86_64-w64-mingw32/include/stddef.h \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Color.inl \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Drawable.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/PrimitiveType.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Rect.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/Vector2.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/Export.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/Angle.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/Angle.inl \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Color.inl \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Drawable.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/PrimitiveType.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Rect.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/Vector2.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/Export.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/Angle.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/Angle.inl \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/cassert \
  D:/a_computer/Game_gw/mingw64/x86_64-w64-mingw32/include/assert.h \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/stdlib.h \
@@ -45,7 +45,7 @@ CMakeFiles/main.dir/src/main.cpp.obj: \
  D:/a_computer/Game_gw/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/mm_malloc.h \
  D:/a_computer/Game_gw/mingw64/x86_64-w64-mingw32/include/errno.h \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/std_abs.h \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/Vector2.inl \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/Vector2.inl \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/optional \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/version.h \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/type_traits \
@@ -68,11 +68,11 @@ CMakeFiles/main.dir/src/main.cpp.obj: \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/concept_check.h \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/debug/assertions.h \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/utility.h \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Rect.inl \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/RenderStates.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/CoordinateType.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/StencilMode.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Transform.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Rect.inl \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/RenderStates.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/CoordinateType.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/StencilMode.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Transform.hpp \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/array \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/compare \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/functexcept.h \
@@ -88,11 +88,11 @@ CMakeFiles/main.dir/src/main.cpp.obj: \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bit \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/concepts \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/range_access.h \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Transform.inl \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Transform.inl \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/cstddef \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Transformable.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/VertexArray.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Vertex.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Transformable.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/VertexArray.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Vertex.hpp \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/vector \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/requires_hosted.h \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/allocator.h \
@@ -113,12 +113,12 @@ CMakeFiles/main.dir/src/main.cpp.obj: \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/uses_allocator.h \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/uses_allocator_args.h \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/tuple \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/ConvexShape.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Font.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Glyph.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Texture.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/GlResource.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/Export.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/ConvexShape.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Font.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Glyph.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Texture.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/GlResource.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/Export.hpp \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/memory \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/stl_tempbuf.h \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/stl_raw_storage_iter.h \
@@ -232,59 +232,59 @@ CMakeFiles/main.dir/src/main.cpp.obj: \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/hashtable_policy.h \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/node_handle.h \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/erase_if.h \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Image.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/RectangleShape.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/RenderTarget.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/View.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/RenderTexture.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/ContextSettings.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/RenderWindow.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/VideoMode.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/Window.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/WindowBase.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/Vulkan.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/WindowEnums.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/WindowHandle.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/Time.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Image.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/RectangleShape.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/RenderTarget.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/View.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/RenderTexture.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/ContextSettings.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/RenderWindow.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/VideoMode.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/Window.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/WindowBase.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/Vulkan.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/WindowEnums.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/WindowHandle.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/Time.hpp \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/chrono \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/Time.inl \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/WindowBase.inl \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/Event.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/Joystick.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/String.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/Utf.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/Utf.inl \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/String.inl \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/Time.inl \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/WindowBase.inl \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/Event.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/Joystick.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/String.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/Utf.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/Utf.inl \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/String.inl \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/iterator \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/stream_iterator.h \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/Keyboard.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/Mouse.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/Sensor.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/Vector3.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/Vector3.inl \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/Keyboard.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/Mouse.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/Sensor.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/Vector3.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/Vector3.inl \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/variant \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/Event.inl \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/Event.inl \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/utility \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/stl_relops.h \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/Clock.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Shader.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Glsl.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Glsl.inl \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Sprite.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/Text.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Graphics/VertexBuffer.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/Clipboard.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/Context.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/Cursor.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/Window/Touch.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/Err.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/Exception.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/FileInputStream.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/InputStream.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/MemoryInputStream.hpp \
- D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/include/SFML/System/Sleep.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/Clock.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Shader.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Glsl.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Glsl.inl \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Sprite.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/Text.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Graphics/VertexBuffer.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/Clipboard.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/Context.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/Cursor.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/Window/Touch.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/Err.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/Exception.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/FileInputStream.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/InputStream.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/MemoryInputStream.hpp \
+ D:/a_computer/game/Bomb-disposal\ cat/third_party/SFML-3.0.0/include/SFML/System/Sleep.hpp \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/algorithm \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/stl_algo.h \
  D:/a_computer/Game_gw/mingw64/include/c++/14.2.0/bits/algorithmfwd.h \
