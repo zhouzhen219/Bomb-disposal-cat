@@ -1,0 +1,10 @@
+D:/a_computer/game/Bomb-disposal cat/build/CMakeFiles/main.dir
+D:/a_computer/game/Bomb-disposal cat/build/CMakeFiles/package.dir
+D:/a_computer/game/Bomb-disposal cat/build/CMakeFiles/package_source.dir
+D:/a_computer/game/Bomb-disposal cat/build/CMakeFiles/test.dir
+D:/a_computer/game/Bomb-disposal cat/build/CMakeFiles/edit_cache.dir
+D:/a_computer/game/Bomb-disposal cat/build/CMakeFiles/rebuild_cache.dir
+D:/a_computer/game/Bomb-disposal cat/build/CMakeFiles/list_install_components.dir
+D:/a_computer/game/Bomb-disposal cat/build/CMakeFiles/install.dir
+D:/a_computer/game/Bomb-disposal cat/build/CMakeFiles/install/local.dir
+D:/a_computer/game/Bomb-disposal cat/build/CMakeFiles/install/strip.dir

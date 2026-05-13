@@ -1,0 +1,1 @@
+  -L"D:/a_computer/SFML/SFML-3.0.0-windows-gcc-14.2.0-mingw-64-bit/SFML-3.0.0/lib"  -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lsfml-network -static-libgcc -static-libstdc++ -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 
