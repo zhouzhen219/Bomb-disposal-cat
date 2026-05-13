@@ -1,8 +1,0 @@
-[
-{
-  "directory": "D:/a_computer/game/Bomb-disposal cat/build",
-  "command": "D:\\a_computer\\Game_gw\\mingw64\\bin\\g++.exe  @CMakeFiles/main.dir/includes_CXX.rsp -g -O2 -Wall -Wextra -o CMakeFiles\\main.dir\\src\\main.cpp.obj -c \"D:\\a_computer\\game\\Bomb-disposal cat\\src\\main.cpp\"",
-  "file": "D:/a_computer/game/Bomb-disposal cat/src/main.cpp",
-  "output": "CMakeFiles/main.dir/src/main.cpp.obj"
-}
-]
