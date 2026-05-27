@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iostream>
 #include <random>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -1100,6 +1101,9 @@ class UIManager
     std::filesystem::path dataRoot;
     std::array<sf::Texture, 11> cardTextures;
     std::array<bool, 11> cardTextureLoaded;
+    sf::Texture deckTexture;
+    std::optional<sf::Sprite> deckSprite;
+    bool deckTextureLoaded = false;
 
     sf::RectangleShape deckShape;
     sf::Text deckLabel;
@@ -1166,14 +1170,46 @@ public:
         logFile.close();
 
         // 牌库图形
-        deckShape.setSize({100, 140});
-        deckShape.setPosition({550, 300});
+        deckShape.setSize({140, 190});
+        deckShape.setPosition({550, 260});
         deckShape.setFillColor(sf::Color(139, 69, 19));
 
+        std::filesystem::path deckImagePath;
+        if (!dataRoot.empty())
+            deckImagePath = dataRoot / "pai" / "mopaidui.png";
+        else
+            deckImagePath = std::filesystem::path("data/pai") / "mopaidui.png";
+
+        deckTextureLoaded = loadTextureFromCandidates(deckTexture, makeCandidatePaths(deckImagePath));
+        if (deckTextureLoaded)
+        {
+            deckShape.setFillColor(sf::Color::Transparent);
+            deckSprite.emplace(deckTexture);
+            const auto textureSize = deckTexture.getSize();
+            if (textureSize.x > 0 && textureSize.y > 0)
+            {
+                const float sx = deckShape.getSize().x / static_cast<float>(textureSize.x);
+                const float sy = deckShape.getSize().y / static_cast<float>(textureSize.y);
+                const float uniformScale = std::min(sx, sy);
+                deckSprite->setScale(sf::Vector2f(uniformScale, uniformScale));
+
+                const float scaledWidth = static_cast<float>(textureSize.x) * uniformScale;
+                const float scaledHeight = static_cast<float>(textureSize.y) * uniformScale;
+                const float offsetX = (deckShape.getSize().x - scaledWidth) * 0.5f;
+                const float offsetY = (deckShape.getSize().y - scaledHeight) * 0.5f;
+                deckSprite->setPosition({deckShape.getPosition().x + offsetX, deckShape.getPosition().y + offsetY});
+            }
+            else
+            {
+                deckSprite->setPosition(deckShape.getPosition());
+            }
+        }
+
         // 字体加载成功后，重新创建Text对象以确保使用正确的字体
-        deckLabel = sf::Text(font, makeSfUtf8String(std::string(u8"\u724c\u5e93")), 20);
+        deckLabel = sf::Text(font, makeSfUtf8String(std::string(u8"\u6478\u724c\u5806")), 18);
         deckLabel.setFillColor(sf::Color::White);
-        deckLabel.setPosition({570.f, 350.f});
+        deckLabel.setOutlineColor(sf::Color(0, 0, 0, 180));
+        deckLabel.setOutlineThickness(2.f);
 
         messageText = sf::Text(font, sf::String(), 24);
         messageText.setFillColor(sf::Color::White);
@@ -1247,7 +1283,7 @@ public:
             // 卡牌背景
             sf::RectangleShape rect({cardWidth, cardHeight});
             rect.setPosition({x, y});
-            rect.setFillColor(hasCardTexture(player->hand[i].type) ? sf::Color(255, 255, 255, 30) : cardColor(player->hand[i].type));
+            rect.setFillColor(hasCardTexture(player->hand[i].type) ? sf::Color::Transparent : cardColor(player->hand[i].type));
             rect.setOutlineThickness(2.f);
             rect.setOutlineColor(sf::Color(30, 30, 30));
             handShapes.push_back(rect);
@@ -1277,11 +1313,14 @@ public:
                 handSprites.push_back(sprite);
             }
 
-            // 卡牌文字（✅ 必须带字体构造）
-            sf::Text label(font, makeSfUtf8String(cardName(player->hand[i].type)), 18);
-            label.setFillColor(sf::Color::White);
-            label.setPosition({x + 8.f, y + cardHeight - 28.f});
-            handLabels.push_back(label);
+            // 有贴图的功能牌不再叠加牌名字样，避免遮挡卡面。
+            if (!hasCardTexture(player->hand[i].type))
+            {
+                sf::Text label(font, makeSfUtf8String(cardName(player->hand[i].type)), 18);
+                label.setFillColor(sf::Color::White);
+                label.setPosition({x + 8.f, y + cardHeight - 28.f});
+                handLabels.push_back(label);
+            }
         }
     }
 
@@ -1296,7 +1335,10 @@ public:
 
         std::vector<int> targets = game.getSelectableTargets();
         const float startX = 100.f;
-        const float y = 470.f;
+        const bool showTargetHandCount = (game.pendingAction == Game::PendingAction::Favor ||
+                                          game.pendingAction == Game::PendingAction::Exchange ||
+                                          game.pendingAction == Game::PendingAction::Attack);
+        const float y = showTargetHandCount ? 460.f : 470.f;
         const float btnWidth = 120.f;
         const float btnHeight = 44.f;
         const float gap = 12.f;
@@ -1311,9 +1353,9 @@ public:
             btn.setFillColor(sf::Color(70, 70, 130));
             targetButtons.push_back(btn);
 
-            // 如果正在进行索要(Favor)或交换(Exchange)，在玩家名后显示当前手牌数量
+            // 索要/交换/甩锅目标选择时，玩家名后显示当前手牌数量
             std::string displayName = game.players[playerIndex].name;
-            if (game.pendingAction == Game::PendingAction::Favor || game.pendingAction == Game::PendingAction::Exchange)
+            if (showTargetHandCount)
             {
                 displayName += std::string(u8" （") + std::to_string(static_cast<int>(game.players[playerIndex].hand.size())) + std::string(u8"张）");
             }
@@ -1386,17 +1428,25 @@ public:
     {
         window.clear(sf::Color(30, 30, 30));
 
+        auto centerText = [](sf::Text &text)
+        {
+            const auto bounds = text.getLocalBounds();
+            text.setOrigin({bounds.position.x + bounds.size.x / 2.f, bounds.position.y + bounds.size.y / 2.f});
+        };
+
         // 绘制牌库
         window.draw(deckShape);
-        window.draw(deckLabel);
+        if (deckTextureLoaded && deckSprite.has_value())
+            window.draw(*deckSprite);
 
         // 显示牌库剩余牌数
         size_t remaining = game.deck.size();
-        sf::Text remainingText(font, makeSfUtf8String(std::string(u8"剩余") + std::to_string(remaining) + std::string(u8"张")), 16);
+        sf::Text remainingText(font, makeSfUtf8String(std::string(u8"剩余 ") + std::to_string(remaining) + std::string(u8" 张")), 18);
         remainingText.setFillColor(sf::Color::White);
-        auto remainingBounds = remainingText.getLocalBounds();
-        remainingText.setOrigin({remainingBounds.position.x + remainingBounds.size.x / 2.f, remainingBounds.position.y + remainingBounds.size.y / 2.f});
-        remainingText.setPosition({deckShape.getPosition().x + deckShape.getSize().x / 2.f, deckShape.getPosition().y + deckShape.getSize().y / 2.f - 24.f});
+        remainingText.setOutlineColor(sf::Color(0, 0, 0, 180));
+        remainingText.setOutlineThickness(1.f);
+        remainingText.setPosition({deckShape.getPosition().x + deckShape.getSize().x / 2.f, deckShape.getPosition().y + deckShape.getSize().y - 48.f});
+        centerText(remainingText);
         window.draw(remainingText);
 
         // 计算爆炸猫概率并绘制条形指示器（条在牌库右侧）
