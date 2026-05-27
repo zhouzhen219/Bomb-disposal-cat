@@ -1,0 +1,8 @@
+# mapping.txt
+# 格式：索引 文件名
+# 索引范围：1..7
+# 下面是示例映射（按你的图片命名）
+1 xipai.png
+2 zhuanxiang.png
+3 chaichu.png
+4 toushi.png
