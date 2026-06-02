@@ -45,14 +45,19 @@ namespace
     }
 }
 
-TetrisGame::TetrisGame()
+TetrisGame::TetrisGame(int requestedPlayers)
     : window(), player1(), player2(), isGameOver(false), isGameQuit(false), resultPhase(ResultPhase::Playing),
       resultLoserPlayer(0), resultWinnerPlayer(0), resultClock(), uiFont(), hasUiFont(false), tBackground(),
       tTiles(), emptyTexture(), sBackground(emptyTexture), window_width(1350), window_height(1000), imgBGno(1),
-      imgSkinNo(1), gameClock()
+      imgSkinNo(1), requestedPlayerCount(std::clamp(requestedPlayers, 2, 6)), playerModeHint(), gameClock()
 {
-    window.create(sf::VideoMode({static_cast<unsigned int>(window_width), static_cast<unsigned int>(window_height)}), "Dual Tetris");
+    const std::string title = "Dual Tetris - Selected players: " + std::to_string(requestedPlayerCount);
+    window.create(sf::VideoMode({static_cast<unsigned int>(window_width), static_cast<unsigned int>(window_height)}), title);
     window.setKeyRepeatEnabled(false);
+
+    if (requestedPlayerCount != 2)
+        playerModeHint = "Current scene is 2-player battle. Selected " + std::to_string(requestedPlayerCount) + " players from start screen.";
+
     gameInitial();
 }
 
@@ -284,10 +289,30 @@ void TetrisGame::gameDraw()
     player1.Draw();
     player2.Draw();
 
+    drawModeHint();
+
     if (resultPhase != ResultPhase::Playing)
         drawResultOverlay();
 
     window.display();
+}
+
+void TetrisGame::drawModeHint()
+{
+    if (!hasUiFont || playerModeHint.empty())
+        return;
+
+    sf::RectangleShape hintBg(sf::Vector2f(1200.f, 40.f));
+    hintBg.setPosition(sf::Vector2f(75.f, 30.f));
+    hintBg.setFillColor(sf::Color(0, 0, 0, 120));
+    window.draw(hintBg);
+
+    sf::Text hint(uiFont);
+    hint.setCharacterSize(24);
+    hint.setFillColor(sf::Color(245, 230, 140));
+    hint.setString(playerModeHint);
+    hint.setPosition(sf::Vector2f(90.f, 35.f));
+    window.draw(hint);
 }
 
 void TetrisGame::drawResultOverlay()

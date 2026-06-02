@@ -56,6 +56,13 @@ namespace
             std::filesystem::path("../../") / relativePath,
         };
     }
+
+    bool loadSystemUIFont(sf::Font &font)
+    {
+        return font.openFromFile("C:/Windows/Fonts/msyh.ttc") ||
+               font.openFromFile("C:/Windows/Fonts/simhei.ttf") ||
+               font.openFromFile("C:/Windows/Fonts/arial.ttf");
+    }
 }
 
 // ---------- 卡牌定义 ----------
@@ -1544,6 +1551,208 @@ public:
     }
 };
 
+class StartScreen
+{
+    sf::RenderWindow window;
+    sf::Font font;
+    bool hasFont = false;
+    std::filesystem::path dataRoot;
+    sf::Texture backgroundTexture;
+    std::optional<sf::Sprite> backgroundSprite;
+    bool hasBackgroundTexture = false;
+    sf::Texture buttonTexture;
+    std::optional<sf::Sprite> buttonSprite;
+    bool hasButtonTexture = false;
+    sf::RectangleShape panel;
+    sf::RectangleShape startButton;
+    sf::Text titleText;
+    sf::Text subtitleText;
+    sf::Text buttonText;
+
+public:
+    StartScreen()
+        : window(sf::VideoMode({1280u, 720u}), "拆弹猫 - Start"),
+          titleText(font),
+          subtitleText(font),
+          buttonText(font)
+    {
+        window.setFramerateLimit(60);
+        hasFont = loadSystemUIFont(font);
+        dataRoot = findDataRoot();
+
+        std::filesystem::path backgroundPath;
+        if (!dataRoot.empty())
+            backgroundPath = dataRoot / "bg" / "背景1.jpg";
+        else
+            backgroundPath = std::filesystem::path("data/bg") / "背景1.jpg";
+
+        hasBackgroundTexture = loadTextureFromCandidates(backgroundTexture, makeCandidatePaths(backgroundPath));
+        if (hasBackgroundTexture)
+        {
+            backgroundSprite.emplace(backgroundTexture);
+            backgroundSprite->setTexture(backgroundTexture, true);
+            const auto textureSize = backgroundTexture.getSize();
+            if (textureSize.x > 0 && textureSize.y > 0)
+            {
+                const float scaleX = 1280.f / static_cast<float>(textureSize.x);
+                const float scaleY = 720.f / static_cast<float>(textureSize.y);
+                const float scale = std::max(scaleX, scaleY);
+                backgroundSprite->setScale(sf::Vector2f(scale, scale));
+
+                const float scaledWidth = static_cast<float>(textureSize.x) * scale;
+                const float scaledHeight = static_cast<float>(textureSize.y) * scale;
+                backgroundSprite->setPosition(sf::Vector2f((1280.f - scaledWidth) * 0.5f, (720.f - scaledHeight) * 0.5f));
+            }
+        }
+
+        std::filesystem::path buttonPath;
+        if (!dataRoot.empty())
+            buttonPath = dataRoot / "bg" / "begin.png";
+        else
+            buttonPath = std::filesystem::path("data/bg") / "begin.png";
+
+        hasButtonTexture = loadTextureFromCandidates(buttonTexture, makeCandidatePaths(buttonPath));
+        if (hasButtonTexture)
+        {
+            buttonSprite.emplace(buttonTexture);
+            buttonSprite->setTexture(buttonTexture, true);
+        }
+
+        panel.setSize(sf::Vector2f(420.f, 250.f));
+        panel.setPosition(sf::Vector2f(820.f, 50.f));
+        panel.setFillColor(sf::Color(32, 38, 52, 190));
+        panel.setOutlineThickness(2.f);
+        panel.setOutlineColor(sf::Color(88, 96, 120));
+
+        startButton.setSize(sf::Vector2f(300.f, 96.f));
+        // centered horizontally, moved up slightly
+        startButton.setPosition(sf::Vector2f(640.f - startButton.getSize().x * 0.5f, 560.f));
+        startButton.setFillColor(sf::Color(52, 170, 109, 0));
+        startButton.setOutlineThickness(0.f);
+        startButton.setOutlineColor(sf::Color::Transparent);
+
+        if (hasButtonTexture)
+        {
+            const auto textureSize = buttonTexture.getSize();
+            if (textureSize.x > 0 && textureSize.y > 0)
+            {
+                const float scaleX = startButton.getSize().x / static_cast<float>(textureSize.x);
+                const float scaleY = startButton.getSize().y / static_cast<float>(textureSize.y);
+                const float scale = std::min(scaleX, scaleY);
+                buttonSprite->setScale(sf::Vector2f(scale, scale));
+
+                const float scaledWidth = static_cast<float>(textureSize.x) * scale;
+                const float scaledHeight = static_cast<float>(textureSize.y) * scale;
+                const float offsetX = startButton.getPosition().x + (startButton.getSize().x - scaledWidth) * 0.5f;
+                const float offsetY = startButton.getPosition().y + (startButton.getSize().y - scaledHeight) * 0.5f;
+                buttonSprite->setPosition(sf::Vector2f(offsetX, offsetY));
+            }
+            startButton.setFillColor(sf::Color::Transparent);
+        }
+
+        titleText.setCharacterSize(64);
+        titleText.setStyle(sf::Text::Bold);
+        titleText.setFillColor(sf::Color::White);
+        titleText.setString(hasFont ? makeSfUtf8String(u8"拆弹猫") : sf::String("Bomb Cat"));
+
+        subtitleText.setCharacterSize(30);
+        subtitleText.setFillColor(sf::Color(230, 235, 245));
+        subtitleText.setString(hasFont ? makeSfUtf8String(u8"准备开始一局紧张的拆弹对决") : sf::String("Press start to play"));
+
+        buttonText.setCharacterSize(34);
+        buttonText.setStyle(sf::Text::Bold);
+        buttonText.setFillColor(sf::Color::White);
+        buttonText.setString(sf::String());
+
+        alignTextRight(titleText, 1220.f, 110.f);
+        alignTextRight(subtitleText, 1220.f, 182.f);
+    }
+
+    bool run()
+    {
+        while (window.isOpen())
+        {
+            bool startRequested = false;
+            while (const std::optional event = window.pollEvent())
+            {
+                if (event->is<sf::Event::Closed>())
+                {
+                    window.close();
+                    return false;
+                }
+
+                if (event->is<sf::Event::KeyPressed>())
+                {
+                    const auto keyEvent = event->getIf<sf::Event::KeyPressed>();
+                    if (keyEvent && keyEvent->code == sf::Keyboard::Key::Enter)
+                    {
+                        startRequested = true;
+                    }
+                }
+
+                if (event->is<sf::Event::MouseButtonPressed>())
+                {
+                    const auto mouseEvent = event->getIf<sf::Event::MouseButtonPressed>();
+                    if (mouseEvent && mouseEvent->button == sf::Mouse::Button::Left)
+                    {
+                        sf::Vector2f mousePos = window.mapPixelToCoords(mouseEvent->position);
+                        if (startButton.getGlobalBounds().contains(mousePos))
+                            startRequested = true;
+                    }
+                }
+            }
+
+            if (startRequested)
+            {
+                window.close();
+                return true;
+            }
+
+            const sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+            if (!hasButtonTexture)
+            {
+                const bool hovered = startButton.getGlobalBounds().contains(mousePos);
+                startButton.setFillColor(hovered ? sf::Color(72, 196, 129) : sf::Color(52, 170, 109));
+            }
+
+            window.clear();
+            if (hasBackgroundTexture)
+                window.draw(*backgroundSprite);
+            else
+            {
+                sf::RectangleShape fallbackBackground(sf::Vector2f(1280.f, 720.f));
+                fallbackBackground.setFillColor(sf::Color(18, 22, 32));
+                window.draw(fallbackBackground);
+            }
+            window.draw(panel);
+            if (hasButtonTexture && buttonSprite.has_value())
+                window.draw(*buttonSprite);
+            window.draw(startButton);
+            window.draw(titleText);
+            window.draw(subtitleText);
+            window.draw(buttonText);
+            window.display();
+        }
+
+        return false;
+    }
+
+private:
+    void centerText(sf::Text &text, float x, float y)
+    {
+        const auto bounds = text.getLocalBounds();
+        text.setOrigin(sf::Vector2f(bounds.position.x + bounds.size.x * 0.5f, bounds.position.y + bounds.size.y * 0.5f));
+        text.setPosition(sf::Vector2f(x, y));
+    }
+
+    void alignTextRight(sf::Text &text, float rightX, float y)
+    {
+        const auto bounds = text.getLocalBounds();
+        text.setOrigin(sf::Vector2f(bounds.position.x + bounds.size.x, bounds.position.y + bounds.size.y * 0.5f));
+        text.setPosition(sf::Vector2f(rightX, y));
+    }
+};
+
 int main()
 {
 // 设置控制台编码支持
@@ -1553,14 +1762,205 @@ int main()
 
     std::setlocale(LC_ALL, ".UTF-8"); // 设置locale为UTF-8
 
-    int numPlayers;
-    std::cout << u8"\u8bf7\u8f93\u5165\u73a9\u5bb6\u4eba\u6570" << " (2-6): ";
-    std::cin >> numPlayers;
-    if (numPlayers < 2 || numPlayers > 6)
+    StartScreen startScreen;
+    if (!startScreen.run())
+        return 0;
+
+    // Player selection screen
+    class PlayerSelectScreen
     {
-        std::cout << u8"\u4eba\u6570\u9519\u8bef\uff0c\u9ed8\u8ba4\u8bbe\u7f6e\u4e3a4\u4eba" << std::endl;
-        numPlayers = 4;
-    }
+        sf::RenderWindow window;
+        sf::Font font;
+        bool hasFont = false;
+        std::filesystem::path dataRoot;
+        sf::Texture bgTexture;
+        std::optional<sf::Sprite> bgSprite;
+        bool hasBg = false;
+        std::vector<sf::RectangleShape> buttons;
+        std::vector<sf::Text> labels;
+        std::vector<sf::Texture> buttonTextures;
+        std::vector<bool> hasButtonTexture;
+        std::vector<std::optional<sf::Sprite>> buttonSprites;
+
+    public:
+        PlayerSelectScreen()
+            : window(sf::VideoMode({1280u, 720u}), "选择玩家数量"),
+              labels()
+        {
+            window.setFramerateLimit(60);
+            hasFont = loadSystemUIFont(font);
+            dataRoot = findDataRoot();
+
+            std::filesystem::path bgPath = dataRoot.empty() ? std::filesystem::path("data/bg") / "背景2.jpg" : dataRoot / "bg" / "背景2.jpg";
+            hasBg = loadTextureFromCandidates(bgTexture, makeCandidatePaths(bgPath));
+            if (hasBg)
+            {
+                bgSprite.emplace(bgTexture);
+                const auto ts = bgTexture.getSize();
+                if (ts.x > 0 && ts.y > 0)
+                {
+                    const float sx = 1280.f / static_cast<float>(ts.x);
+                    const float sy = 720.f / static_cast<float>(ts.y);
+                    const float s = std::max(sx, sy);
+                    bgSprite->setScale({s, s});
+                    const float w = ts.x * s, h = ts.y * s;
+                    bgSprite->setPosition(sf::Vector2f((1280.f - w) * 0.5f, (720.f - h) * 0.5f));
+                }
+            }
+
+            // prepare 6 square buttons (3 columns x 2 rows)
+            const float btnSize = 100.f;
+            const float gap = 28.f;
+            const float totalW = 3 * btnSize + 2 * gap;
+            const float totalH = 2 * btnSize + gap;
+            const float marginRight = 90.f;
+            const float marginBottom = 80.f;
+            // position group in the bottom-right corner
+            const float startX = 1280.f - marginRight - totalW;
+            const float startY = 720.f - marginBottom - totalH;
+
+            // load textures for buttons 1..6 if available
+            buttonTextures.resize(6);
+            hasButtonTexture.resize(6, false);
+            for (int ti = 0; ti < 6; ++ti)
+            {
+                const std::string fname = std::to_string(ti + 1) + ".png";
+                std::filesystem::path tpath = dataRoot.empty() ? std::filesystem::path("data/bg") / fname : dataRoot / "bg" / fname;
+                hasButtonTexture[ti] = loadTextureFromCandidates(buttonTextures[ti], makeCandidatePaths(tpath));
+            }
+
+            for (int r = 0; r < 2; ++r)
+            {
+                for (int c = 0; c < 3; ++c)
+                {
+                    const int idx = r * 3 + c;
+                    sf::RectangleShape btn({btnSize, btnSize});
+                    btn.setPosition(sf::Vector2f(startX + c * (btnSize + gap), startY + r * (btnSize + gap)));
+                    if (hasButtonTexture[idx])
+                    {
+                        // keep rectangle for bounds, create a sprite for drawing scaled to button size
+                        btn.setFillColor(sf::Color::Transparent);
+                        btn.setOutlineThickness(0.f);
+                    }
+                    else
+                    {
+                        btn.setFillColor(sf::Color(70, 130, 180, 200));
+                        btn.setOutlineColor(sf::Color::White);
+                        btn.setOutlineThickness(2.f);
+                    }
+                    buttons.push_back(btn);
+                    // create sprite placeholder (empty) and populate if textured
+                    if (hasButtonTexture[idx])
+                    {
+                        // construct sprite with texture
+                        buttonSprites.emplace_back(sf::Sprite(buttonTextures[idx]));
+                        auto &spr = *buttonSprites.back();
+                        const auto ts = buttonTextures[idx].getSize();
+                        if (ts.x > 0 && ts.y > 0)
+                        {
+                            const float sx = btnSize / static_cast<float>(ts.x);
+                            const float sy = btnSize / static_cast<float>(ts.y);
+                            spr.setScale({sx, sy});
+                        }
+                        spr.setPosition(sf::Vector2f(startX + c * (btnSize + gap), startY + r * (btnSize + gap)));
+                    }
+                    else
+                    {
+                        buttonSprites.emplace_back(std::nullopt);
+                    }
+
+                    sf::Text t(font);
+                    t.setCharacterSize(18);
+                    t.setFillColor(sf::Color::White);
+                    labels.push_back(t);
+                }
+            }
+
+            // set label strings
+            for (size_t i = 0; i < labels.size(); ++i)
+            {
+                const std::string s = std::to_string(static_cast<int>(i + 1));
+                labels[i].setFont(font);
+                labels[i].setString(makeSfUtf8String(s));
+                // center label on the button
+                const auto bpos = buttons[i].getPosition();
+                const auto bsize = buttons[i].getSize();
+                const auto lb = labels[i].getLocalBounds();
+                labels[i].setOrigin(sf::Vector2f(lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f));
+                labels[i].setPosition(sf::Vector2f(bpos.x + bsize.x * 0.5f, bpos.y + bsize.y * 0.5f - 3.f));
+            }
+        }
+
+        int run()
+        {
+            while (window.isOpen())
+            {
+                while (const std::optional ev = window.pollEvent())
+                {
+                    if (ev->is<sf::Event::Closed>())
+                    {
+                        window.close();
+                        return 0;
+                    }
+                    if (ev->is<sf::Event::MouseButtonPressed>())
+                    {
+                        const auto me = ev->getIf<sf::Event::MouseButtonPressed>();
+                        if (me && me->button == sf::Mouse::Button::Left)
+                        {
+                            sf::Vector2f mp = window.mapPixelToCoords(me->position);
+                            for (size_t i = 0; i < buttons.size(); ++i)
+                            {
+                                if (buttons[i].getGlobalBounds().contains(mp))
+                                {
+                                    window.close();
+                                    return static_cast<int>(i + 1);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                window.clear();
+                if (hasBg)
+                    window.draw(*bgSprite);
+                else
+                {
+                    sf::RectangleShape fb({1280.f, 720.f});
+                    fb.setFillColor(sf::Color(18, 22, 32));
+                    window.draw(fb);
+                }
+
+                for (size_t i = 0; i < buttons.size(); ++i)
+                {
+                    if (i < hasButtonTexture.size() && hasButtonTexture[i])
+                    {
+                        if (i < buttonSprites.size() && buttonSprites[i].has_value())
+                            window.draw(*buttonSprites[i]);
+                        else
+                            window.draw(buttons[i]);
+                    }
+                    else
+                    {
+                        window.draw(buttons[i]);
+                    }
+                }
+                for (size_t i = 0; i < labels.size(); ++i)
+                {
+                    if (i < hasButtonTexture.size() && hasButtonTexture[i])
+                        continue; // texture already shows the number
+                    window.draw(labels[i]);
+                }
+
+                window.display();
+            }
+            return 0;
+        }
+    };
+
+    PlayerSelectScreen psel;
+    int numPlayers = psel.run();
+    if (numPlayers <= 0)
+        return 0;
 
     Game game(numPlayers);
     UIManager ui(game);

@@ -9,7 +9,7 @@
 class TetrisGame
 {
 public:
-    TetrisGame();
+    explicit TetrisGame(int requestedPlayers);
     ~TetrisGame();
     void gameRun();
 
@@ -29,6 +29,7 @@ private:
     void gameDraw();
     void startResultSequence(int loserPlayer, int winnerPlayer);
     void drawResultOverlay();
+    void drawModeHint();
 
     sf::RenderWindow window;
     Tetris player1, player2;
@@ -48,5 +49,7 @@ private:
 
     int window_width, window_height;
     int imgBGno, imgSkinNo;
+    int requestedPlayerCount;
+    std::string playerModeHint;
     sf::Clock gameClock;
 };

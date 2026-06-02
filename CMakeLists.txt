@@ -9,7 +9,12 @@ set(SFML_DIR "${SFML_ROOT}/lib/cmake/SFML" CACHE PATH "Path to the SFML package 
 find_package(SFML 3 CONFIG COMPONENTS Graphics Window System Audio Network REQUIRED)
 
 # ====== 2. 编写目标文件 ======
-add_executable(main src/main.cpp)
+add_executable(main
+    src/main.cpp
+    src/Game.cpp
+    src/Tetris.cpp
+)
+target_include_directories(main PRIVATE include)
 target_compile_features(main PRIVATE cxx_std_17)
 
 # 优化标志
