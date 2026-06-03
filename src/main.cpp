@@ -1,7 +1,5 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
-#include <SFML/Graphics.hpp>
-#include <SFML/Window.hpp>
 #include <SFML/System.hpp>
 #include <algorithm>
 #include <chrono>
@@ -16,6 +14,10 @@
 #include <vector>
 #include <array>
 #include <cstdint>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 namespace
 {
@@ -63,6 +65,33 @@ namespace
                font.openFromFile("C:/Windows/Fonts/simhei.ttf") ||
                font.openFromFile("C:/Windows/Fonts/arial.ttf");
     }
+
+    // 逻辑分辨率固定为 1280x720
+    const float LOGIC_WIDTH = 1280.f;
+    const float LOGIC_HEIGHT = 720.f;
+
+    // 全局记录上一次窗口的物理尺寸和最大化状态
+    sf::Vector2u g_lastWindowSize(1280, 720);
+    bool g_wasMaximized = false;
+
+#ifdef _WIN32
+    void maximizeWindow(sf::RenderWindow &window)
+    {
+        HWND hwnd = reinterpret_cast<HWND>(window.getNativeHandle());
+        ShowWindow(hwnd, SW_MAXIMIZE);
+    }
+
+    bool isWindowMaximized(sf::RenderWindow &window)
+    {
+        HWND hwnd = reinterpret_cast<HWND>(window.getNativeHandle());
+        WINDOWPLACEMENT placement;
+        GetWindowPlacement(hwnd, &placement);
+        return placement.showCmd == SW_SHOWMAXIMIZED;
+    }
+#else
+    void maximizeWindow(sf::RenderWindow &) {}
+    bool isWindowMaximized(sf::RenderWindow &) { return false; }
+#endif
 }
 
 // ---------- 卡牌定义 ----------
@@ -85,40 +114,28 @@ std::string cardName(CardType type)
 {
     switch (type)
     {
-    // 爆炸猫：抽到后若无拆除牌则立即出局
     case CardType::ExplodingKitten:
         return u8"\u70b8\u5f39";
-    // 拆除：用于化解爆炸猫并将其放回牌库
     case CardType::Defuse:
         return u8"\u62c6\u9664";
-    // 透视：查看牌库顶的三张牌
     case CardType::SeeTheFuture:
         return u8"\u900f\u89c6";
-    // 预言：提示最近一张炸弹距离牌顶的位置
     case CardType::Prophecy:
         return u8"\u9884\u8a00";
-    // 洗牌：将当前牌库顺序随机打乱
     case CardType::Shuffle:
         return u8"\u6d17\u724c";
-    // 抽底：下一次抽牌改为从牌库底部抽取
     case CardType::DrawFromBottom:
         return u8"\u62bd\u5e95";
-    // 跳过：直接结束自己的当前回合（不抽牌）
     case CardType::Skip:
         return u8"\u8df3\u8fc7";
-    // 转向：反转出牌/回合推进方向
     case CardType::Reverse:
         return u8"\u8f6c\u5411";
-    // 甩锅：令目标玩家额外执行一个完整回合
     case CardType::Attack:
         return u8"\u7529\u9505";
-    // 索要：从目标玩家手中随机拿走一张牌
     case CardType::Favor:
         return u8"\u7d22\u8981";
-    // 交换：与指定目标交换全部手牌
     case CardType::Exchange:
         return u8"\u4ea4\u6362";
-    // 未知：兜底分支，正常情况下不应出现
     default:
         return u8"\u672a\u77e5";
     }
@@ -285,16 +302,15 @@ public:
     bool gameOver = false;
     bool drawRequired = true;
     int forcedNextPlayer = -1;
-    int forcedTargetIndex = -1;            // 当前被强制代摸的玩家索引（用于 Attack）
-    int returnToPlayer = -1;               // Attack 后应回到的玩家索引
-    bool returnPending = false;            // 是否在等待将回合交还给 returnToPlayer
-    int attackOriginIndex = -1;            // 发起甩锅的玩家索引
-    int attackOriginStep = 1;              // 发起甩锅时的方向步长（1 或 -1），用于按原始顺序查找下一位
-    int attackChainSource = -1;            // 甩锅链的发起者索引（-1表示无链，用于限制被甩玩家再甩）
-    bool waitingForAttackResponse = false; // 被甩玩家是否正在等待反击（可出牌或摸牌）
+    int forcedTargetIndex = -1;
+    int returnToPlayer = -1;
+    bool returnPending = false;
+    int attackOriginIndex = -1;
+    int attackOriginStep = 1;
+    int attackChainSource = -1;
+    bool waitingForAttackResponse = false;
     PendingAction pendingAction = PendingAction::None;
     std::string message;
-    // 抽牌后短暂停顿（以秒为单位）
     bool drawPaused = false;
     float drawPauseSeconds = 0.f;
     sf::Clock drawPauseClock;
@@ -307,13 +323,12 @@ public:
         for (int i = 1; i <= numPlayers; ++i)
             players.emplace_back(std::string(u8"\u73a9\u5bb6") + std::to_string(i));
 
-        // 默认第一个玩家为人类，其他为 AI
         if (!players.empty())
             players[0].isAI = false;
         for (size_t i = 1; i < players.size(); ++i)
             players[i].isAI = true;
 
-        currentPlayer = 0; // 开局固定为玩家一
+        currentPlayer = 0;
         setupDeck(numPlayers);
         message = std::string(u8"\u8f6e\u5230 ") + players[currentPlayer].name;
         turnClock.restart();
@@ -361,7 +376,6 @@ public:
         return alive <= 1;
     }
 
-    // 获取最后存活的玩家（胜者）
     Player *getWinner()
     {
         for (auto &p : players)
@@ -386,7 +400,6 @@ public:
             gameOver = true;
     }
 
-    // 在指定起点按当前方向寻找下一个存活玩家（排除起点自身）
     int findNextAliveFrom(int idx, int step) const
     {
         int n = static_cast<int>(players.size());
@@ -402,18 +415,14 @@ public:
         if (gameOver)
             return;
 
-        // 如果之前有一个被强制代摸的流程正在进行，且当前刚完成的是被代摸的玩家
         if (returnPending && forcedTargetIndex >= 0 && currentPlayer == forcedTargetIndex)
         {
-            // 尝试按发起甩锅时的原始顺序寻找下一位存活玩家
             int candidate = -1;
             if (attackOriginIndex >= 0)
             {
                 candidate = findNextAliveFrom(attackOriginIndex, attackOriginStep);
-                // 如果找到的候选与发起者相同且该发起者已被淘汰，表示没有其他玩家，直接设置为 candidate
             }
 
-            // 如果 candidate 无效或对应玩家不存活，则按当前方向从当前索引前进寻找存活玩家
             if (candidate < 0 || !players[candidate].alive)
             {
                 int step = direction ? 1 : -1;
@@ -421,16 +430,14 @@ public:
             }
 
             currentPlayer = candidate;
-            // 清理攻击相关状态
             returnPending = false;
             forcedNextPlayer = -1;
             forcedTargetIndex = -1;
             returnToPlayer = -1;
             attackOriginIndex = -1;
             attackOriginStep = 1;
-            attackChainSource = -1; // 甩锅链结束，清除源
+            attackChainSource = -1;
 
-            // 启动该玩家的回合计时
             drawRequired = true;
             turnClock.restart();
             message = std::string(u8"\u8f6e\u5230 ") + players[currentPlayer].name;
@@ -502,7 +509,7 @@ public:
 
             if (pendingAction == PendingAction::Attack)
             {
-                targets.push_back(i); // 甩锅可指定任意存活玩家（含自己）
+                targets.push_back(i);
                 continue;
             }
 
@@ -512,10 +519,8 @@ public:
         return targets;
     }
 
-    // AI 选择攻击目标：优先选择人类玩家（非 AI），若无则随机
     int chooseAIAttackTarget(int aiIndex)
     {
-        // 首先找人类玩家
         for (int i = 0; i < static_cast<int>(players.size()); ++i)
         {
             if (i == aiIndex)
@@ -525,7 +530,6 @@ public:
             if (!players[i].isAI)
                 return i;
         }
-        // 否则随机一个存活的玩家（非自己）
         std::vector<int> candidates;
         for (int i = 0; i < static_cast<int>(players.size()); ++i)
         {
@@ -541,7 +545,6 @@ public:
         return candidates[std::uniform_int_distribution<int>(0, static_cast<int>(candidates.size()) - 1)(rng)];
     }
 
-    // AI 为索要/交换选择手牌最多的玩家；并列时随机挑选
     int chooseAITargetForStealOrExchange(int aiIndex)
     {
         std::vector<int> bestTargets;
@@ -606,7 +609,6 @@ public:
         returnToPlayer = -1;
     }
 
-    // AI 自动目标选择待处理（用于在展示出牌后再自动选择目标以便显示中间结果）
     int aiPendingTarget = -1;
     bool aiWillSelectTarget = false;
 
@@ -625,7 +627,6 @@ public:
             pendingAction = PendingAction::None;
             if (targetIndex == currentPlayer)
             {
-                // 指定自己：不再授予额外回合，仅提示已指定自己（无效果）
                 message = actor.name + std::string(u8" \u5bf9\u81ea\u5df1\u7529\u9505\uff1a\u65e0\u989d\u5916\u56de\u5408");
             }
             else
@@ -633,32 +634,26 @@ public:
                 int attacker = currentPlayer;
                 int step = direction ? 1 : -1;
 
-                // 检查是否已在甩锅链中
                 if (attackOriginIndex < 0)
                 {
-                    // 首次甩锅，记录原始发起者和方向
                     attackOriginIndex = attacker;
                     attackOriginStep = step;
                 }
-                // 如果已在甩锅链中，保持原发起者和方向不变，只更新被摸的玩家
 
-                // 更新被甩的玩家（摸牌的玩家）
                 forcedTargetIndex = targetIndex;
-                forcedNextPlayer = targetIndex; // 立即把目标设为下个当前玩家去代摸
-                // 设置甩锅链源为首次发起者，限制原始发起者被甩回时不能再甩
+                forcedNextPlayer = targetIndex;
                 attackChainSource = attackOriginIndex;
 
-                // 仅在首次甩锅时计算回到的玩家
                 if (returnToPlayer < 0)
                 {
                     int nextAfterOrigin = findNextAliveFrom(attackOriginIndex, attackOriginStep);
-                    returnToPlayer = nextAfterOrigin; // 代摸完成后应回到此存活玩家
+                    returnToPlayer = nextAfterOrigin;
                 }
 
                 waitingForAttackResponse = true;
                 drawRequired = false;
                 forcedNextPlayer = targetIndex;
-                currentPlayer = targetIndex; // 切到被甩玩家
+                currentPlayer = targetIndex;
                 message = players[attacker].name + std::string(u8" 甩锅给 ") + players[targetIndex].name + std::string(u8"，") + players[targetIndex].name + std::string(u8" 可以出牌反击或摸牌");
             }
             return;
@@ -703,23 +698,19 @@ public:
             if (drawPauseClock.getElapsedTime().asSeconds() >= drawPauseSeconds)
             {
                 drawPaused = false;
-                // 如果有 AI 待选目标，优先执行选目标动作以展示出牌结果
                 if (aiWillSelectTarget)
                 {
                     aiWillSelectTarget = false;
                     int tgt = aiPendingTarget;
                     aiPendingTarget = -1;
                     selectTarget(tgt);
-                    // 展示选定目标的结果
                     drawPaused = true;
                     drawPauseSeconds = 3.f;
                     drawPauseClock.restart();
                     return;
                 }
-                // 如果还需要摸牌（drawRequired为true）
                 if (drawRequired)
                 {
-                    // AI且存活：自动结束出牌阶段并摸牌
                     if (!gameOver && players[currentPlayer].isAI && players[currentPlayer].alive)
                     {
                         endPlayPhase();
@@ -729,45 +720,36 @@ public:
                         return;
                     }
 
-                    // 当前玩家已出局：直接推进到下一回合
                     if (!players[currentPlayer].alive)
                     {
                         nextTurn();
                         return;
                     }
 
-                    // 否则是人类玩家且仍需摸牌：等待玩家手动操作（不自动推进）
                     return;
                 }
 
-                // drawRequired 为 false，进入下一回合
                 nextTurn();
             }
             return;
         }
 
-        // 如果当前玩家是 AI，且可以执行出牌/抽牌操作，则让 AI 决策
         if (!gameOver && players[currentPlayer].isAI && players[currentPlayer].alive && !isWaitingForTarget())
         {
-            // 如果处于等待反击状态，AI 可以选择反击或摸牌
             if (waitingForAttackResponse && currentPlayer == forcedTargetIndex)
             {
-                // 优先甩锅，其次跳过/转向，否则摸牌（由 endPlayPhase 处理）
                 Player &ai = players[currentPlayer];
                 int idxAttack = canAIUseAttackNow(currentPlayer) ? ai.findCardIndex(CardType::Attack) : -1;
                 if (idxAttack >= 0)
                 {
                     playCard(idxAttack);
-                    // 明确显示 AI 出了甩锅牌
                     message = ai.name + std::string(u8" 出了 ") + cardName(CardType::Attack);
-                    // AI 在展示出牌后再自动选择目标以便用户能看到出牌信息
                     int tgt = chooseAIAttackTarget(currentPlayer);
                     if (tgt >= 0)
                     {
                         aiPendingTarget = tgt;
                         aiWillSelectTarget = true;
                     }
-                    // 展示短暂停顿（显示出牌）
                     drawPaused = true;
                     drawPauseSeconds = 3.f;
                     drawPauseClock.restart();
@@ -795,20 +777,16 @@ public:
                     return;
                 }
 
-                // 无牌可抵抗，摸牌
                 endPlayPhase();
-                // 将自动在 handleDrawnCard 中设置停顿（我们希望 AI 的停顿为3秒）
                 drawPaused = true;
                 drawPauseSeconds = 3.f;
                 drawPauseClock.restart();
                 return;
             }
 
-            // 普通回合：优先使用功能性卡牌（Skip, Reverse, Favor, Exchange），否则抽牌
             if (drawRequired)
             {
                 Player &ai = players[currentPlayer];
-                // 安全策略：不主动打出 Defuse
                 auto tryPlay = [&](CardType t) -> int
                 { return ai.findCardIndex(t); };
                 std::vector<CardType> priority = {CardType::Attack, CardType::Favor, CardType::Exchange, CardType::DrawFromBottom, CardType::Skip, CardType::Reverse, CardType::Prophecy, CardType::SeeTheFuture, CardType::Shuffle};
@@ -821,9 +799,7 @@ public:
                     if (idx >= 0)
                     {
                         playCard(idx);
-                        // 明确显示 AI 出了哪张牌
                         message = ai.name + std::string(u8" 出了 ") + cardName(ct);
-                        // 如果是需要选择目标的牌，AI 延迟选择目标以先展示出牌动作
                         if (ct == CardType::Favor || ct == CardType::Exchange || ct == CardType::Attack)
                         {
                             int target = -1;
@@ -833,12 +809,10 @@ public:
                                 target = chooseAIAttackTarget(currentPlayer);
                             if (target >= 0)
                             {
-                                // 延迟选择目标以先展示 AI 出牌动作
                                 aiPendingTarget = target;
                                 aiWillSelectTarget = true;
                             }
                         }
-                        // AI 出牌后显示短暂停顿
                         drawPaused = true;
                         drawPauseSeconds = 3.f;
                         drawPauseClock.restart();
@@ -846,7 +820,6 @@ public:
                     }
                 }
 
-                // 没有可出的功能牌，摸牌
                 endPlayPhase();
                 drawPaused = true;
                 drawPauseSeconds = 3.f;
@@ -882,15 +855,11 @@ public:
         if (!canDrawNow() && !waitingForAttackResponse)
             return;
 
-        // 如果正在等待反击，结束反击等待状态并摸牌
         if (waitingForAttackResponse)
         {
             message = getCurrentPlayer()->name + std::string(u8" 选择摸牌，甩锅链结束");
             waitingForAttackResponse = false;
-            // 关键：被甩玩家要摸牌了，设置returnPending为true
-            // 这样摸完牌后在nextTurn()中会回到原始甩锅者的下家
             returnPending = true;
-            // 暂时保留forcedTargetIndex, attackOriginIndex等信息，用于nextTurn()检查
         }
 
         Card c = mustDrawFromBottom ? deck.drawBottom() : deck.drawTop();
@@ -914,11 +883,9 @@ public:
                 int pos = std::uniform_int_distribution<int>(0, static_cast<int>(deck.size()))(rng);
                 deck.insertCardAt(c, pos);
                 message = player.name + std::string(u8" \u62bd\u5230\u70b8\u5f39\uff0c\u5df2\u4f7f\u7528\u62c6\u9664\u5e76\u79d8\u5bc6\u653e\u56de\u724c\u5e93\u3002");
-                // 摸牌后短暂停顿
                 drawPaused = true;
                 drawPauseSeconds = 5.f;
                 drawPauseClock.restart();
-                // 已经摸过牌，设置标志防止再摸
                 drawRequired = false;
             }
             else
@@ -933,7 +900,6 @@ public:
                 }
                 else
                 {
-                    // 玩家被炸出局后短暂停顿 5 秒，随后推进到下一个存活玩家
                     drawPaused = true;
                     drawPauseSeconds = 5.f;
                     drawPauseClock.restart();
@@ -947,11 +913,9 @@ public:
             message = player.name + std::string(u8" \u62bd\u5230\u4e86 ") + cardName(c.type);
         }
 
-        // 普通摸牌后短暂停顿 5 秒以展示信息
         drawPaused = true;
         drawPauseSeconds = 5.f;
         drawPauseClock.restart();
-        // 已经摸过牌，设置标志防止再摸
         drawRequired = false;
     }
 
@@ -974,7 +938,6 @@ public:
 
         Card card = p.hand[handIndex];
 
-        // 当玩家正在等待攻击反击时，只允许出特定的牌
         if (waitingForAttackResponse)
         {
             if (card.type != CardType::Attack && card.type != CardType::Skip && card.type != CardType::Reverse)
@@ -987,10 +950,8 @@ public:
             }
         }
 
-        // 只有在甩锅链源是当前玩家时，才禁止出甩锅牌（表示被甩回了）
         if (attackChainSource >= 0 && attackChainSource == currentPlayer && card.type == CardType::Attack)
         {
-            // 甩锅无效，把牌加回手中
             message = std::string(u8"甩锅无效！你已被甩过一次，必须摸牌。系统已将甩锅牌归还。");
             return;
         }
@@ -1041,7 +1002,6 @@ public:
             if (waitingForAttackResponse)
             {
                 message = p.name + std::string(u8" 使用跳过牌躲避摸牌！");
-                // 保留甩锅链信息，交给 nextTurn() 按原始甩锅发起者的下家回收回合
                 waitingForAttackResponse = false;
                 returnPending = true;
             }
@@ -1069,13 +1029,11 @@ public:
         case CardType::Attack:
             if (waitingForAttackResponse)
             {
-                // 反击甩锅，继续链传递
                 pendingAction = PendingAction::Attack;
                 message = p.name + std::string(u8" 反击甩锅！请选择甩锅目标");
             }
             else if (attackChainSource >= 0 && attackChainSource == currentPlayer)
             {
-                // 甩锅无效，把牌加回手中
                 p.hand.push_back(card);
                 message = std::string(u8"甩锅无效！你已被甩过一次，必须摸牌。系统已将甩锅牌归还。");
             }
@@ -1099,10 +1057,447 @@ public:
     }
 };
 
-// ---------- UI 定义（SFML 3 兼容版，使用系统字体）----------
+// ---------- 工具函数：处理窗口 resize 并维持固定逻辑分辨率 ----------
+void applyResizeView(sf::RenderWindow &window, const sf::View &fixedView, unsigned int winWidth, unsigned int winHeight)
+{
+    float winW = static_cast<float>(winWidth);
+    float winH = static_cast<float>(winHeight);
+    float viewW = LOGIC_WIDTH;
+    float viewH = LOGIC_HEIGHT;
+    float viewAspect = viewW / viewH;
+    float winAspect = winW / winH;
+
+    sf::View newView(fixedView);
+    if (winAspect > viewAspect)
+    {
+        // 窗口更宽，上下黑边
+        float scale = winH / viewH;
+        float newWidth = viewW * scale;
+        float offsetX = (winW - newWidth) * 0.5f;
+        newView.setViewport(sf::FloatRect(sf::Vector2f(offsetX / winW, 0.f), sf::Vector2f(newWidth / winW, 1.f)));
+    }
+    else
+    {
+        // 窗口更高，左右黑边
+        float scale = winW / viewW;
+        float newHeight = viewH * scale;
+        float offsetY = (winH - newHeight) * 0.5f;
+        newView.setViewport(sf::FloatRect(sf::Vector2f(0.f, offsetY / winH), sf::Vector2f(1.f, newHeight / winH)));
+    }
+    window.setView(newView);
+}
+
+// ---------- 开始界面 ----------
+class StartScreen
+{
+    sf::RenderWindow window;
+    sf::View fixedView;
+    sf::Font font;
+    bool hasFont = false;
+    std::filesystem::path dataRoot;
+    sf::Texture backgroundTexture;
+    std::optional<sf::Sprite> backgroundSprite;
+    bool hasBackgroundTexture = false;
+    sf::Texture buttonTexture;
+    std::optional<sf::Sprite> buttonSprite;
+    bool hasButtonTexture = false;
+    sf::RectangleShape panel;
+    sf::RectangleShape startButton;
+    sf::Text titleText;
+    sf::Text subtitleText;
+    sf::Text buttonText;
+
+public:
+    StartScreen(const sf::Vector2u &windowSize = sf::Vector2u(1280, 720))
+        : window(sf::VideoMode(windowSize, 32), "拆弹猫 - Start", sf::Style::Default),
+          fixedView(sf::FloatRect(sf::Vector2f(0.f, 0.f), sf::Vector2f(LOGIC_WIDTH, LOGIC_HEIGHT))),
+          titleText(font),
+          subtitleText(font),
+          buttonText(font)
+    {
+        window.setFramerateLimit(60);
+        window.setView(fixedView);
+
+        // 如果上次是最大化，则最大化当前窗口
+        if (g_wasMaximized)
+        {
+            maximizeWindow(window);
+        }
+
+        hasFont = loadSystemUIFont(font);
+        dataRoot = findDataRoot();
+
+        // 背景图片
+        std::filesystem::path backgroundPath;
+        if (!dataRoot.empty())
+            backgroundPath = dataRoot / "bg" / "背景1.jpg";
+        else
+            backgroundPath = std::filesystem::path("data/bg") / "背景1.jpg";
+
+        hasBackgroundTexture = loadTextureFromCandidates(backgroundTexture, makeCandidatePaths(backgroundPath));
+        if (hasBackgroundTexture)
+        {
+            backgroundSprite.emplace(backgroundTexture);
+            backgroundSprite->setTexture(backgroundTexture, true);
+            const auto textureSize = backgroundTexture.getSize();
+            if (textureSize.x > 0 && textureSize.y > 0)
+            {
+                float scaleX = LOGIC_WIDTH / static_cast<float>(textureSize.x);
+                float scaleY = LOGIC_HEIGHT / static_cast<float>(textureSize.y);
+                float scale = std::max(scaleX, scaleY);
+                backgroundSprite->setScale(sf::Vector2f(scale, scale));
+                float scaledWidth = textureSize.x * scale;
+                float scaledHeight = textureSize.y * scale;
+                backgroundSprite->setPosition(sf::Vector2f((LOGIC_WIDTH - scaledWidth) * 0.5f,
+                                                           (LOGIC_HEIGHT - scaledHeight) * 0.5f));
+            }
+        }
+
+        // 开始按钮图片
+        std::filesystem::path buttonPath;
+        if (!dataRoot.empty())
+            buttonPath = dataRoot / "bg" / "begin.png";
+        else
+            buttonPath = std::filesystem::path("data/bg") / "begin.png";
+
+        hasButtonTexture = loadTextureFromCandidates(buttonTexture, makeCandidatePaths(buttonPath));
+        if (hasButtonTexture)
+        {
+            buttonSprite.emplace(buttonTexture);
+            buttonSprite->setTexture(buttonTexture, true);
+        }
+
+        panel.setSize({420.f, 250.f});
+        panel.setPosition({820.f, 50.f});
+        panel.setFillColor(sf::Color(32, 38, 52, 190));
+        panel.setOutlineThickness(2.f);
+        panel.setOutlineColor(sf::Color(88, 96, 120));
+
+        startButton.setSize({300.f, 96.f});
+        startButton.setPosition({640.f - startButton.getSize().x * 0.5f, 560.f});
+        startButton.setFillColor(sf::Color(52, 170, 109, 0));
+        startButton.setOutlineThickness(0.f);
+        startButton.setOutlineColor(sf::Color::Transparent);
+
+        if (hasButtonTexture)
+        {
+            const auto textureSize = buttonTexture.getSize();
+            if (textureSize.x > 0 && textureSize.y > 0)
+            {
+                float scaleX = startButton.getSize().x / static_cast<float>(textureSize.x);
+                float scaleY = startButton.getSize().y / static_cast<float>(textureSize.y);
+                float scale = std::min(scaleX, scaleY);
+                buttonSprite->setScale(sf::Vector2f(scale, scale));
+                float scaledWidth = textureSize.x * scale;
+                float scaledHeight = textureSize.y * scale;
+                float offsetX = startButton.getPosition().x + (startButton.getSize().x - scaledWidth) * 0.5f;
+                float offsetY = startButton.getPosition().y + (startButton.getSize().y - scaledHeight) * 0.5f;
+                buttonSprite->setPosition({offsetX, offsetY});
+            }
+            startButton.setFillColor(sf::Color::Transparent);
+        }
+
+        titleText.setCharacterSize(64);
+        titleText.setStyle(sf::Text::Bold);
+        titleText.setFillColor(sf::Color::White);
+        titleText.setString(hasFont ? makeSfUtf8String(u8"拆弹猫") : sf::String("Bomb Cat"));
+
+        subtitleText.setCharacterSize(30);
+        subtitleText.setFillColor(sf::Color(230, 235, 245));
+        subtitleText.setString(hasFont ? makeSfUtf8String(u8"准备开始一局紧张的拆弹对决") : sf::String("Press start to play"));
+
+        buttonText.setCharacterSize(34);
+        buttonText.setStyle(sf::Text::Bold);
+        buttonText.setFillColor(sf::Color::White);
+        buttonText.setString(sf::String());
+
+        auto alignTextRight = [&](sf::Text &text, float rightX, float y)
+        {
+            const auto bounds = text.getLocalBounds();
+            text.setOrigin(sf::Vector2f(bounds.position.x + bounds.size.x, bounds.position.y + bounds.size.y * 0.5f));
+            text.setPosition(sf::Vector2f(rightX, y));
+        };
+        alignTextRight(titleText, 1220.f, 110.f);
+        alignTextRight(subtitleText, 1220.f, 182.f);
+    }
+
+    bool run()
+    {
+        while (window.isOpen())
+        {
+            bool startRequested = false;
+            while (const std::optional event = window.pollEvent())
+            {
+                if (event->is<sf::Event::Closed>())
+                {
+                    window.close();
+                    return false;
+                }
+                if (event->is<sf::Event::Resized>())
+                {
+                    const auto resized = event->getIf<sf::Event::Resized>();
+                    applyResizeView(window, fixedView, resized->size.x, resized->size.y);
+                }
+                if (event->is<sf::Event::KeyPressed>())
+                {
+                    const auto keyEvent = event->getIf<sf::Event::KeyPressed>();
+                    if (keyEvent && keyEvent->code == sf::Keyboard::Key::Enter)
+                        startRequested = true;
+                }
+                if (event->is<sf::Event::MouseButtonPressed>())
+                {
+                    const auto mouseEvent = event->getIf<sf::Event::MouseButtonPressed>();
+                    if (mouseEvent && mouseEvent->button == sf::Mouse::Button::Left)
+                    {
+                        sf::Vector2f mousePos = window.mapPixelToCoords(mouseEvent->position);
+                        if (startButton.getGlobalBounds().contains(mousePos))
+                            startRequested = true;
+                    }
+                }
+            }
+
+            if (startRequested)
+            {
+                g_lastWindowSize = window.getSize();
+                g_wasMaximized = isWindowMaximized(window);
+                window.close();
+                return true;
+            }
+
+            const sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+            if (!hasButtonTexture)
+            {
+                bool hovered = startButton.getGlobalBounds().contains(mousePos);
+                startButton.setFillColor(hovered ? sf::Color(72, 196, 129) : sf::Color(52, 170, 109));
+            }
+
+            window.clear();
+            if (hasBackgroundTexture)
+                window.draw(*backgroundSprite);
+            else
+            {
+                sf::RectangleShape fallbackBackground({LOGIC_WIDTH, LOGIC_HEIGHT});
+                fallbackBackground.setFillColor(sf::Color(18, 22, 32));
+                window.draw(fallbackBackground);
+            }
+            window.draw(panel);
+            if (hasButtonTexture && buttonSprite.has_value())
+                window.draw(*buttonSprite);
+            window.draw(startButton);
+            window.draw(titleText);
+            window.draw(subtitleText);
+            window.draw(buttonText);
+            window.display();
+        }
+        return false;
+    }
+};
+
+// ---------- 选择玩家数量界面 ----------
+class PlayerSelectScreen
+{
+    sf::RenderWindow window;
+    sf::View fixedView;
+    sf::Font font;
+    bool hasFont = false;
+    std::filesystem::path dataRoot;
+    sf::Texture bgTexture;
+    std::optional<sf::Sprite> bgSprite;
+    bool hasBg = false;
+    std::vector<sf::RectangleShape> buttons;
+    std::vector<sf::Text> labels;
+    std::vector<sf::Texture> buttonTextures;
+    std::vector<bool> hasButtonTexture;
+    std::vector<std::optional<sf::Sprite>> buttonSprites;
+
+public:
+    PlayerSelectScreen(const sf::Vector2u &windowSize = sf::Vector2u(1280, 720))
+        : window(sf::VideoMode(windowSize, 32), "选择玩家数量", sf::Style::Default),
+          fixedView(sf::FloatRect(sf::Vector2f(0.f, 0.f), sf::Vector2f(LOGIC_WIDTH, LOGIC_HEIGHT))),
+          labels()
+    {
+        window.setFramerateLimit(60);
+        window.setView(fixedView);
+
+        if (g_wasMaximized)
+        {
+            maximizeWindow(window);
+        }
+
+        hasFont = loadSystemUIFont(font);
+        dataRoot = findDataRoot();
+
+        std::filesystem::path bgPath = dataRoot.empty() ? std::filesystem::path("data/bg") / "背景2.jpg" : dataRoot / "bg" / "背景2.jpg";
+        hasBg = loadTextureFromCandidates(bgTexture, makeCandidatePaths(bgPath));
+        if (hasBg)
+        {
+            bgSprite.emplace(bgTexture);
+            const auto ts = bgTexture.getSize();
+            if (ts.x > 0 && ts.y > 0)
+            {
+                float sx = LOGIC_WIDTH / static_cast<float>(ts.x);
+                float sy = LOGIC_HEIGHT / static_cast<float>(ts.y);
+                float s = std::max(sx, sy);
+                bgSprite->setScale({s, s});
+                float w = ts.x * s, h = ts.y * s;
+                bgSprite->setPosition(sf::Vector2f((LOGIC_WIDTH - w) * 0.5f, (LOGIC_HEIGHT - h) * 0.5f));
+            }
+        }
+
+        const float btnSize = 100.f;
+        const float gap = 28.f;
+        const float totalW = 3 * btnSize + 2 * gap;
+        const float totalH = 2 * btnSize + gap;
+        const float marginRight = 90.f;
+        const float marginBottom = 80.f;
+        const float startX = LOGIC_WIDTH - marginRight - totalW;
+        const float startY = LOGIC_HEIGHT - marginBottom - totalH;
+
+        buttonTextures.resize(6);
+        hasButtonTexture.resize(6, false);
+        for (int ti = 0; ti < 6; ++ti)
+        {
+            const std::string fname = std::to_string(ti + 1) + ".png";
+            std::filesystem::path tpath = dataRoot.empty() ? std::filesystem::path("data/bg") / fname : dataRoot / "bg" / fname;
+            hasButtonTexture[ti] = loadTextureFromCandidates(buttonTextures[ti], makeCandidatePaths(tpath));
+        }
+
+        for (int r = 0; r < 2; ++r)
+        {
+            for (int c = 0; c < 3; ++c)
+            {
+                const int idx = r * 3 + c;
+                sf::RectangleShape btn({btnSize, btnSize});
+                btn.setPosition(sf::Vector2f(startX + c * (btnSize + gap), startY + r * (btnSize + gap)));
+                if (hasButtonTexture[idx])
+                {
+                    btn.setFillColor(sf::Color::Transparent);
+                    btn.setOutlineThickness(0.f);
+                }
+                else
+                {
+                    btn.setFillColor(sf::Color(70, 130, 180, 200));
+                    btn.setOutlineColor(sf::Color::White);
+                    btn.setOutlineThickness(2.f);
+                }
+                buttons.push_back(btn);
+
+                if (hasButtonTexture[idx])
+                {
+                    buttonSprites.emplace_back(sf::Sprite(buttonTextures[idx]));
+                    auto &spr = *buttonSprites.back();
+                    const auto ts = buttonTextures[idx].getSize();
+                    if (ts.x > 0 && ts.y > 0)
+                    {
+                        const float sx = btnSize / static_cast<float>(ts.x);
+                        const float sy = btnSize / static_cast<float>(ts.y);
+                        spr.setScale({sx, sy});
+                    }
+                    spr.setPosition(sf::Vector2f(startX + c * (btnSize + gap), startY + r * (btnSize + gap)));
+                }
+                else
+                {
+                    buttonSprites.emplace_back(std::nullopt);
+                }
+
+                sf::Text t(font);
+                t.setCharacterSize(18);
+                t.setFillColor(sf::Color::White);
+                labels.push_back(t);
+            }
+        }
+
+        for (size_t i = 0; i < labels.size(); ++i)
+        {
+            const std::string s = std::to_string(static_cast<int>(i + 1));
+            labels[i].setFont(font);
+            labels[i].setString(makeSfUtf8String(s));
+            const auto bpos = buttons[i].getPosition();
+            const auto bsize = buttons[i].getSize();
+            const auto lb = labels[i].getLocalBounds();
+            labels[i].setOrigin(sf::Vector2f(lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f));
+            labels[i].setPosition(sf::Vector2f(bpos.x + bsize.x * 0.5f, bpos.y + bsize.y * 0.5f - 3.f));
+        }
+    }
+
+    int run()
+    {
+        while (window.isOpen())
+        {
+            while (const std::optional ev = window.pollEvent())
+            {
+                if (ev->is<sf::Event::Closed>())
+                {
+                    window.close();
+                    return 0;
+                }
+                if (ev->is<sf::Event::Resized>())
+                {
+                    const auto resized = ev->getIf<sf::Event::Resized>();
+                    applyResizeView(window, fixedView, resized->size.x, resized->size.y);
+                }
+                if (ev->is<sf::Event::MouseButtonPressed>())
+                {
+                    const auto me = ev->getIf<sf::Event::MouseButtonPressed>();
+                    if (me && me->button == sf::Mouse::Button::Left)
+                    {
+                        sf::Vector2f mp = window.mapPixelToCoords(me->position);
+                        for (size_t i = 0; i < buttons.size(); ++i)
+                        {
+                            if (buttons[i].getGlobalBounds().contains(mp))
+                            {
+                                g_lastWindowSize = window.getSize();
+                                g_wasMaximized = isWindowMaximized(window);
+                                window.close();
+                                return static_cast<int>(i + 1);
+                            }
+                        }
+                    }
+                }
+            }
+
+            window.clear();
+            if (hasBg)
+                window.draw(*bgSprite);
+            else
+            {
+                sf::RectangleShape fb({LOGIC_WIDTH, LOGIC_HEIGHT});
+                fb.setFillColor(sf::Color(18, 22, 32));
+                window.draw(fb);
+            }
+
+            for (size_t i = 0; i < buttons.size(); ++i)
+            {
+                if (i < hasButtonTexture.size() && hasButtonTexture[i])
+                {
+                    if (i < buttonSprites.size() && buttonSprites[i].has_value())
+                        window.draw(*buttonSprites[i]);
+                    else
+                        window.draw(buttons[i]);
+                }
+                else
+                {
+                    window.draw(buttons[i]);
+                }
+            }
+            for (size_t i = 0; i < labels.size(); ++i)
+            {
+                if (i < hasButtonTexture.size() && hasButtonTexture[i])
+                    continue;
+                window.draw(labels[i]);
+            }
+
+            window.display();
+        }
+        return 0;
+    }
+};
+
+// ---------- 游戏主界面 ----------
 class UIManager
 {
     sf::RenderWindow window;
+    sf::View fixedView;
     sf::Font font;
     Game &game;
     std::filesystem::path dataRoot;
@@ -1117,7 +1512,7 @@ class UIManager
 
     std::vector<sf::RectangleShape> handShapes;
     std::vector<sf::Sprite> handSprites;
-    std::vector<sf::Text> handLabels; // 每个手牌文字也需要字体
+    std::vector<sf::Text> handLabels;
 
     std::vector<sf::RectangleShape> targetButtons;
     std::vector<sf::Text> targetLabels;
@@ -1128,8 +1523,9 @@ class UIManager
     sf::Text timerText;
 
 public:
-    UIManager(Game &g)
-        : window(sf::VideoMode({1200, 800}), "拆弹猫 - 简约版"),
+    UIManager(Game &g, const sf::Vector2u &windowSize = sf::Vector2u(1280, 720))
+        : window(sf::VideoMode(windowSize, 32), "拆弹猫 - 简约版", sf::Style::Default),
+          fixedView(sf::FloatRect(sf::Vector2f(0.f, 0.f), sf::Vector2f(LOGIC_WIDTH, LOGIC_HEIGHT))),
           game(g),
           dataRoot(findDataRoot()),
           cardTextureLoaded(),
@@ -1138,15 +1534,17 @@ public:
           currentPlayerText(font),
           timerText(font)
     {
+        window.setFramerateLimit(60);
+        window.setView(fixedView);
+
+        if (g_wasMaximized)
+        {
+            maximizeWindow(window);
+        }
+
         cardTextureLoaded.fill(false);
 
-        // 使用系统自带中文字体（支持中文）
-        // 尝试多个字体路径，优先级：微软雅黑 > 宋体 > 黑体
         bool fontLoaded = false;
-
-        std::ofstream logFile("font_debug.log");
-        logFile << "=== 字体加载调试 ===" << std::endl;
-
         std::vector<std::string> fontPaths = {
             "C:\\Windows\\Fonts\\msyh.ttc",
             "C:\\Windows\\Fonts\\simhei.ttf",
@@ -1154,29 +1552,18 @@ public:
 
         for (const auto &path : fontPaths)
         {
-            logFile << "尝试加载: " << path << std::endl;
             if (font.openFromFile(path))
             {
-                logFile << "✓ 成功: " << path << std::endl;
-                std::cerr << "✓ 字体加载成功: " << path << std::endl;
                 fontLoaded = true;
                 break;
             }
-            logFile << "✗ 失败: " << path << std::endl;
         }
-
         if (!fontLoaded)
         {
-            logFile << "ERROR: 所有字体加载失败！" << std::endl;
-            logFile.close();
-            std::cerr << "ERROR: 所有字体加载失败！请检查Windows\\Fonts目录。" << std::endl;
+            std::cerr << "ERROR: 字体加载失败！" << std::endl;
             exit(-1);
         }
 
-        logFile << "字体加载完成。" << std::endl;
-        logFile.close();
-
-        // 牌库图形
         deckShape.setSize({140, 190});
         deckShape.setPosition({550, 260});
         deckShape.setFillColor(sf::Color(139, 69, 19));
@@ -1212,7 +1599,6 @@ public:
             }
         }
 
-        // 字体加载成功后，重新创建Text对象以确保使用正确的字体
         deckLabel = sf::Text(font, makeSfUtf8String(std::string(u8"\u6478\u724c\u5806")), 18);
         deckLabel.setFillColor(sf::Color::White);
         deckLabel.setOutlineColor(sf::Color(0, 0, 0, 180));
@@ -1278,7 +1664,7 @@ public:
         const float cardWidth = 140.f;
         const float cardHeight = 190.f;
         const float gap = 16.f;
-        const int cardsPerRow = std::max(1, static_cast<int>((window.getSize().x - static_cast<unsigned int>(startX * 2) + static_cast<unsigned int>(gap)) / (cardWidth + gap)));
+        const int cardsPerRow = std::max(1, static_cast<int>((LOGIC_WIDTH - startX * 2 + gap) / (cardWidth + gap)));
 
         for (size_t i = 0; i < player->hand.size(); ++i)
         {
@@ -1287,7 +1673,6 @@ public:
             float x = startX + column * (cardWidth + gap);
             float y = startY + row * (cardHeight + gap);
 
-            // 卡牌背景
             sf::RectangleShape rect({cardWidth, cardHeight});
             rect.setPosition({x, y});
             rect.setFillColor(hasCardTexture(player->hand[i].type) ? sf::Color::Transparent : cardColor(player->hand[i].type));
@@ -1301,7 +1686,6 @@ public:
                 const auto textureSize = cardTextures[static_cast<size_t>(player->hand[i].type)].getSize();
                 if (textureSize.x > 0 && textureSize.y > 0)
                 {
-                    // Preserve source aspect ratio to avoid deformation on different image sizes.
                     const float sx = cardWidth / static_cast<float>(textureSize.x);
                     const float sy = cardHeight / static_cast<float>(textureSize.y);
                     const float uniformScale = std::min(sx, sy);
@@ -1320,7 +1704,6 @@ public:
                 handSprites.push_back(sprite);
             }
 
-            // 有贴图的功能牌不再叠加牌名字样，避免遮挡卡面。
             if (!hasCardTexture(player->hand[i].type))
             {
                 sf::Text label(font, makeSfUtf8String(cardName(player->hand[i].type)), 18);
@@ -1360,7 +1743,6 @@ public:
             btn.setFillColor(sf::Color(70, 70, 130));
             targetButtons.push_back(btn);
 
-            // 索要/交换/甩锅目标选择时，玩家名后显示当前手牌数量
             std::string displayName = game.players[playerIndex].name;
             if (showTargetHandCount)
             {
@@ -1381,13 +1763,16 @@ public:
         {
             if (event->is<sf::Event::Closed>())
                 window.close();
+            else if (event->is<sf::Event::Resized>())
+            {
+                const auto resized = event->getIf<sf::Event::Resized>();
+                applyResizeView(window, fixedView, resized->size.x, resized->size.y);
+            }
             else if (event->is<sf::Event::MouseButtonPressed>())
             {
                 auto pos = event->getIf<sf::Event::MouseButtonPressed>()->position;
-                // 将像素坐标映射到当前视图坐标，避免窗口缩放/最大化后命中检测偏移。
                 sf::Vector2f mousePos = window.mapPixelToCoords(pos);
 
-                // 先处理目标选择按钮
                 if (game.isWaitingForTarget())
                 {
                     updateTargetDisplay();
@@ -1401,7 +1786,6 @@ public:
                     }
                 }
 
-                // 检查手牌点击
                 if (!game.isWaitingForTarget())
                 {
                     for (size_t i = 0; i < handShapes.size(); ++i)
@@ -1414,7 +1798,6 @@ public:
                     }
                 }
 
-                // 点击牌库（抽牌）
                 if (deckShape.getGlobalBounds().contains(mousePos) && game.canDrawNow())
                 {
                     game.endPlayPhase();
@@ -1441,12 +1824,10 @@ public:
             text.setOrigin({bounds.position.x + bounds.size.x / 2.f, bounds.position.y + bounds.size.y / 2.f});
         };
 
-        // 绘制牌库
         window.draw(deckShape);
         if (deckTextureLoaded && deckSprite.has_value())
             window.draw(*deckSprite);
 
-        // 显示牌库剩余牌数
         size_t remaining = game.deck.size();
         sf::Text remainingText(font, makeSfUtf8String(std::string(u8"剩余 ") + std::to_string(remaining) + std::string(u8" 张")), 18);
         remainingText.setFillColor(sf::Color::White);
@@ -1456,7 +1837,6 @@ public:
         centerText(remainingText);
         window.draw(remainingText);
 
-        // 计算爆炸猫概率并绘制条形指示器（条在牌库右侧）
         int bombs = 0;
         for (const auto &c : game.deck.getCards())
             if (c.type == CardType::ExplodingKitten)
@@ -1477,19 +1857,16 @@ public:
 
         sf::RectangleShape barFill({barWidth * prob, barHeight});
         barFill.setPosition(barPos);
-        // 渐变颜色：按概率加深红色（简单方式）
         std::uint8_t red = static_cast<std::uint8_t>(200 + 55 * prob);
         barFill.setFillColor(sf::Color(red, 40, 40));
         window.draw(barFill);
 
-        // 概率文本
         int pct = static_cast<int>(prob * 100.0f + 0.5f);
         sf::Text probText(font, makeSfUtf8String(std::string(u8"爆炸概率: ") + std::to_string(pct) + std::string(u8"%")), 14);
         probText.setFillColor(sf::Color::White);
         probText.setPosition({barPos.x, barPos.y - 18.f});
         window.draw(probText);
 
-        // 绘制手牌
         updateHandDisplay();
         for (auto &shape : handShapes)
             window.draw(shape);
@@ -1498,26 +1875,22 @@ public:
         for (auto &text : handLabels)
             window.draw(text);
 
-        // 绘制目标选择按钮
         updateTargetDisplay();
         for (auto &btn : targetButtons)
             window.draw(btn);
         for (auto &label : targetLabels)
             window.draw(label);
 
-        // 信息文本
         if (!game.message.empty())
             messageText.setString(makeSfUtf8String(game.message));
         else
             messageText.setString(sf::String());
         window.draw(messageText);
 
-        // 当前玩家
         currentPlayerText.setString(makeSfUtf8String(std::string(u8"\u5f53\u524d\uff1a") + game.getCurrentPlayer()->name +
                                                      (game.getCurrentPlayer()->alive ? "" : std::string(u8" (\u5df2\u6dd8\u6c70)"))));
         window.draw(currentPlayerText);
 
-        // 抽牌倒计时（仅在需要摸牌时显示）
         int remain = game.getRemainingDrawSeconds();
         if (remain >= 0)
         {
@@ -1533,7 +1906,7 @@ public:
         while (window.isOpen())
         {
             processEvents();
-            game.update(); // 处理摸牌后的暂停
+            game.update();
             if (game.gameOver)
             {
                 Player *winner = game.getWinner();
@@ -1543,6 +1916,8 @@ public:
                 window.draw(messageText);
                 window.display();
                 sf::sleep(sf::seconds(3));
+                g_lastWindowSize = window.getSize();
+                g_wasMaximized = isWindowMaximized(window);
                 window.close();
                 break;
             }
@@ -1551,419 +1926,24 @@ public:
     }
 };
 
-class StartScreen
-{
-    sf::RenderWindow window;
-    sf::Font font;
-    bool hasFont = false;
-    std::filesystem::path dataRoot;
-    sf::Texture backgroundTexture;
-    std::optional<sf::Sprite> backgroundSprite;
-    bool hasBackgroundTexture = false;
-    sf::Texture buttonTexture;
-    std::optional<sf::Sprite> buttonSprite;
-    bool hasButtonTexture = false;
-    sf::RectangleShape panel;
-    sf::RectangleShape startButton;
-    sf::Text titleText;
-    sf::Text subtitleText;
-    sf::Text buttonText;
-
-public:
-    StartScreen()
-        : window(sf::VideoMode({1280u, 720u}), "拆弹猫 - Start"),
-          titleText(font),
-          subtitleText(font),
-          buttonText(font)
-    {
-        window.setFramerateLimit(60);
-        hasFont = loadSystemUIFont(font);
-        dataRoot = findDataRoot();
-
-        std::filesystem::path backgroundPath;
-        if (!dataRoot.empty())
-            backgroundPath = dataRoot / "bg" / "背景1.jpg";
-        else
-            backgroundPath = std::filesystem::path("data/bg") / "背景1.jpg";
-
-        hasBackgroundTexture = loadTextureFromCandidates(backgroundTexture, makeCandidatePaths(backgroundPath));
-        if (hasBackgroundTexture)
-        {
-            backgroundSprite.emplace(backgroundTexture);
-            backgroundSprite->setTexture(backgroundTexture, true);
-            const auto textureSize = backgroundTexture.getSize();
-            if (textureSize.x > 0 && textureSize.y > 0)
-            {
-                const float scaleX = 1280.f / static_cast<float>(textureSize.x);
-                const float scaleY = 720.f / static_cast<float>(textureSize.y);
-                const float scale = std::max(scaleX, scaleY);
-                backgroundSprite->setScale(sf::Vector2f(scale, scale));
-
-                const float scaledWidth = static_cast<float>(textureSize.x) * scale;
-                const float scaledHeight = static_cast<float>(textureSize.y) * scale;
-                backgroundSprite->setPosition(sf::Vector2f((1280.f - scaledWidth) * 0.5f, (720.f - scaledHeight) * 0.5f));
-            }
-        }
-
-        std::filesystem::path buttonPath;
-        if (!dataRoot.empty())
-            buttonPath = dataRoot / "bg" / "begin.png";
-        else
-            buttonPath = std::filesystem::path("data/bg") / "begin.png";
-
-        hasButtonTexture = loadTextureFromCandidates(buttonTexture, makeCandidatePaths(buttonPath));
-        if (hasButtonTexture)
-        {
-            buttonSprite.emplace(buttonTexture);
-            buttonSprite->setTexture(buttonTexture, true);
-        }
-
-        panel.setSize(sf::Vector2f(420.f, 250.f));
-        panel.setPosition(sf::Vector2f(820.f, 50.f));
-        panel.setFillColor(sf::Color(32, 38, 52, 190));
-        panel.setOutlineThickness(2.f);
-        panel.setOutlineColor(sf::Color(88, 96, 120));
-
-        startButton.setSize(sf::Vector2f(300.f, 96.f));
-        // centered horizontally, moved up slightly
-        startButton.setPosition(sf::Vector2f(640.f - startButton.getSize().x * 0.5f, 560.f));
-        startButton.setFillColor(sf::Color(52, 170, 109, 0));
-        startButton.setOutlineThickness(0.f);
-        startButton.setOutlineColor(sf::Color::Transparent);
-
-        if (hasButtonTexture)
-        {
-            const auto textureSize = buttonTexture.getSize();
-            if (textureSize.x > 0 && textureSize.y > 0)
-            {
-                const float scaleX = startButton.getSize().x / static_cast<float>(textureSize.x);
-                const float scaleY = startButton.getSize().y / static_cast<float>(textureSize.y);
-                const float scale = std::min(scaleX, scaleY);
-                buttonSprite->setScale(sf::Vector2f(scale, scale));
-
-                const float scaledWidth = static_cast<float>(textureSize.x) * scale;
-                const float scaledHeight = static_cast<float>(textureSize.y) * scale;
-                const float offsetX = startButton.getPosition().x + (startButton.getSize().x - scaledWidth) * 0.5f;
-                const float offsetY = startButton.getPosition().y + (startButton.getSize().y - scaledHeight) * 0.5f;
-                buttonSprite->setPosition(sf::Vector2f(offsetX, offsetY));
-            }
-            startButton.setFillColor(sf::Color::Transparent);
-        }
-
-        titleText.setCharacterSize(64);
-        titleText.setStyle(sf::Text::Bold);
-        titleText.setFillColor(sf::Color::White);
-        titleText.setString(hasFont ? makeSfUtf8String(u8"拆弹猫") : sf::String("Bomb Cat"));
-
-        subtitleText.setCharacterSize(30);
-        subtitleText.setFillColor(sf::Color(230, 235, 245));
-        subtitleText.setString(hasFont ? makeSfUtf8String(u8"准备开始一局紧张的拆弹对决") : sf::String("Press start to play"));
-
-        buttonText.setCharacterSize(34);
-        buttonText.setStyle(sf::Text::Bold);
-        buttonText.setFillColor(sf::Color::White);
-        buttonText.setString(sf::String());
-
-        alignTextRight(titleText, 1220.f, 110.f);
-        alignTextRight(subtitleText, 1220.f, 182.f);
-    }
-
-    bool run()
-    {
-        while (window.isOpen())
-        {
-            bool startRequested = false;
-            while (const std::optional event = window.pollEvent())
-            {
-                if (event->is<sf::Event::Closed>())
-                {
-                    window.close();
-                    return false;
-                }
-
-                if (event->is<sf::Event::KeyPressed>())
-                {
-                    const auto keyEvent = event->getIf<sf::Event::KeyPressed>();
-                    if (keyEvent && keyEvent->code == sf::Keyboard::Key::Enter)
-                    {
-                        startRequested = true;
-                    }
-                }
-
-                if (event->is<sf::Event::MouseButtonPressed>())
-                {
-                    const auto mouseEvent = event->getIf<sf::Event::MouseButtonPressed>();
-                    if (mouseEvent && mouseEvent->button == sf::Mouse::Button::Left)
-                    {
-                        sf::Vector2f mousePos = window.mapPixelToCoords(mouseEvent->position);
-                        if (startButton.getGlobalBounds().contains(mousePos))
-                            startRequested = true;
-                    }
-                }
-            }
-
-            if (startRequested)
-            {
-                window.close();
-                return true;
-            }
-
-            const sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
-            if (!hasButtonTexture)
-            {
-                const bool hovered = startButton.getGlobalBounds().contains(mousePos);
-                startButton.setFillColor(hovered ? sf::Color(72, 196, 129) : sf::Color(52, 170, 109));
-            }
-
-            window.clear();
-            if (hasBackgroundTexture)
-                window.draw(*backgroundSprite);
-            else
-            {
-                sf::RectangleShape fallbackBackground(sf::Vector2f(1280.f, 720.f));
-                fallbackBackground.setFillColor(sf::Color(18, 22, 32));
-                window.draw(fallbackBackground);
-            }
-            window.draw(panel);
-            if (hasButtonTexture && buttonSprite.has_value())
-                window.draw(*buttonSprite);
-            window.draw(startButton);
-            window.draw(titleText);
-            window.draw(subtitleText);
-            window.draw(buttonText);
-            window.display();
-        }
-
-        return false;
-    }
-
-private:
-    void centerText(sf::Text &text, float x, float y)
-    {
-        const auto bounds = text.getLocalBounds();
-        text.setOrigin(sf::Vector2f(bounds.position.x + bounds.size.x * 0.5f, bounds.position.y + bounds.size.y * 0.5f));
-        text.setPosition(sf::Vector2f(x, y));
-    }
-
-    void alignTextRight(sf::Text &text, float rightX, float y)
-    {
-        const auto bounds = text.getLocalBounds();
-        text.setOrigin(sf::Vector2f(bounds.position.x + bounds.size.x, bounds.position.y + bounds.size.y * 0.5f));
-        text.setPosition(sf::Vector2f(rightX, y));
-    }
-};
-
 int main()
 {
-// 设置控制台编码支持
 #ifdef _WIN32
-    system("chcp 65001 > nul"); // 设置Windows控制台为UTF-8
+    system("chcp 65001 > nul");
 #endif
+    std::setlocale(LC_ALL, ".UTF-8");
 
-    std::setlocale(LC_ALL, ".UTF-8"); // 设置locale为UTF-8
-
-    StartScreen startScreen;
+    StartScreen startScreen(g_lastWindowSize);
     if (!startScreen.run())
         return 0;
 
-    // Player selection screen
-    class PlayerSelectScreen
-    {
-        sf::RenderWindow window;
-        sf::Font font;
-        bool hasFont = false;
-        std::filesystem::path dataRoot;
-        sf::Texture bgTexture;
-        std::optional<sf::Sprite> bgSprite;
-        bool hasBg = false;
-        std::vector<sf::RectangleShape> buttons;
-        std::vector<sf::Text> labels;
-        std::vector<sf::Texture> buttonTextures;
-        std::vector<bool> hasButtonTexture;
-        std::vector<std::optional<sf::Sprite>> buttonSprites;
-
-    public:
-        PlayerSelectScreen()
-            : window(sf::VideoMode({1280u, 720u}), "选择玩家数量"),
-              labels()
-        {
-            window.setFramerateLimit(60);
-            hasFont = loadSystemUIFont(font);
-            dataRoot = findDataRoot();
-
-            std::filesystem::path bgPath = dataRoot.empty() ? std::filesystem::path("data/bg") / "背景2.jpg" : dataRoot / "bg" / "背景2.jpg";
-            hasBg = loadTextureFromCandidates(bgTexture, makeCandidatePaths(bgPath));
-            if (hasBg)
-            {
-                bgSprite.emplace(bgTexture);
-                const auto ts = bgTexture.getSize();
-                if (ts.x > 0 && ts.y > 0)
-                {
-                    const float sx = 1280.f / static_cast<float>(ts.x);
-                    const float sy = 720.f / static_cast<float>(ts.y);
-                    const float s = std::max(sx, sy);
-                    bgSprite->setScale({s, s});
-                    const float w = ts.x * s, h = ts.y * s;
-                    bgSprite->setPosition(sf::Vector2f((1280.f - w) * 0.5f, (720.f - h) * 0.5f));
-                }
-            }
-
-            // prepare 6 square buttons (3 columns x 2 rows)
-            const float btnSize = 100.f;
-            const float gap = 28.f;
-            const float totalW = 3 * btnSize + 2 * gap;
-            const float totalH = 2 * btnSize + gap;
-            const float marginRight = 90.f;
-            const float marginBottom = 80.f;
-            // position group in the bottom-right corner
-            const float startX = 1280.f - marginRight - totalW;
-            const float startY = 720.f - marginBottom - totalH;
-
-            // load textures for buttons 1..6 if available
-            buttonTextures.resize(6);
-            hasButtonTexture.resize(6, false);
-            for (int ti = 0; ti < 6; ++ti)
-            {
-                const std::string fname = std::to_string(ti + 1) + ".png";
-                std::filesystem::path tpath = dataRoot.empty() ? std::filesystem::path("data/bg") / fname : dataRoot / "bg" / fname;
-                hasButtonTexture[ti] = loadTextureFromCandidates(buttonTextures[ti], makeCandidatePaths(tpath));
-            }
-
-            for (int r = 0; r < 2; ++r)
-            {
-                for (int c = 0; c < 3; ++c)
-                {
-                    const int idx = r * 3 + c;
-                    sf::RectangleShape btn({btnSize, btnSize});
-                    btn.setPosition(sf::Vector2f(startX + c * (btnSize + gap), startY + r * (btnSize + gap)));
-                    if (hasButtonTexture[idx])
-                    {
-                        // keep rectangle for bounds, create a sprite for drawing scaled to button size
-                        btn.setFillColor(sf::Color::Transparent);
-                        btn.setOutlineThickness(0.f);
-                    }
-                    else
-                    {
-                        btn.setFillColor(sf::Color(70, 130, 180, 200));
-                        btn.setOutlineColor(sf::Color::White);
-                        btn.setOutlineThickness(2.f);
-                    }
-                    buttons.push_back(btn);
-                    // create sprite placeholder (empty) and populate if textured
-                    if (hasButtonTexture[idx])
-                    {
-                        // construct sprite with texture
-                        buttonSprites.emplace_back(sf::Sprite(buttonTextures[idx]));
-                        auto &spr = *buttonSprites.back();
-                        const auto ts = buttonTextures[idx].getSize();
-                        if (ts.x > 0 && ts.y > 0)
-                        {
-                            const float sx = btnSize / static_cast<float>(ts.x);
-                            const float sy = btnSize / static_cast<float>(ts.y);
-                            spr.setScale({sx, sy});
-                        }
-                        spr.setPosition(sf::Vector2f(startX + c * (btnSize + gap), startY + r * (btnSize + gap)));
-                    }
-                    else
-                    {
-                        buttonSprites.emplace_back(std::nullopt);
-                    }
-
-                    sf::Text t(font);
-                    t.setCharacterSize(18);
-                    t.setFillColor(sf::Color::White);
-                    labels.push_back(t);
-                }
-            }
-
-            // set label strings
-            for (size_t i = 0; i < labels.size(); ++i)
-            {
-                const std::string s = std::to_string(static_cast<int>(i + 1));
-                labels[i].setFont(font);
-                labels[i].setString(makeSfUtf8String(s));
-                // center label on the button
-                const auto bpos = buttons[i].getPosition();
-                const auto bsize = buttons[i].getSize();
-                const auto lb = labels[i].getLocalBounds();
-                labels[i].setOrigin(sf::Vector2f(lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f));
-                labels[i].setPosition(sf::Vector2f(bpos.x + bsize.x * 0.5f, bpos.y + bsize.y * 0.5f - 3.f));
-            }
-        }
-
-        int run()
-        {
-            while (window.isOpen())
-            {
-                while (const std::optional ev = window.pollEvent())
-                {
-                    if (ev->is<sf::Event::Closed>())
-                    {
-                        window.close();
-                        return 0;
-                    }
-                    if (ev->is<sf::Event::MouseButtonPressed>())
-                    {
-                        const auto me = ev->getIf<sf::Event::MouseButtonPressed>();
-                        if (me && me->button == sf::Mouse::Button::Left)
-                        {
-                            sf::Vector2f mp = window.mapPixelToCoords(me->position);
-                            for (size_t i = 0; i < buttons.size(); ++i)
-                            {
-                                if (buttons[i].getGlobalBounds().contains(mp))
-                                {
-                                    window.close();
-                                    return static_cast<int>(i + 1);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                window.clear();
-                if (hasBg)
-                    window.draw(*bgSprite);
-                else
-                {
-                    sf::RectangleShape fb({1280.f, 720.f});
-                    fb.setFillColor(sf::Color(18, 22, 32));
-                    window.draw(fb);
-                }
-
-                for (size_t i = 0; i < buttons.size(); ++i)
-                {
-                    if (i < hasButtonTexture.size() && hasButtonTexture[i])
-                    {
-                        if (i < buttonSprites.size() && buttonSprites[i].has_value())
-                            window.draw(*buttonSprites[i]);
-                        else
-                            window.draw(buttons[i]);
-                    }
-                    else
-                    {
-                        window.draw(buttons[i]);
-                    }
-                }
-                for (size_t i = 0; i < labels.size(); ++i)
-                {
-                    if (i < hasButtonTexture.size() && hasButtonTexture[i])
-                        continue; // texture already shows the number
-                    window.draw(labels[i]);
-                }
-
-                window.display();
-            }
-            return 0;
-        }
-    };
-
-    PlayerSelectScreen psel;
+    PlayerSelectScreen psel(g_lastWindowSize);
     int numPlayers = psel.run();
     if (numPlayers <= 0)
         return 0;
 
     Game game(numPlayers);
-    UIManager ui(game);
+    UIManager ui(game, g_lastWindowSize);
     ui.run();
 
     return 0;
